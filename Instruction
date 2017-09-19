@@ -2,3 +2,6 @@
 # limitation of twitter streaming API:
 # The API cap the volume at 1% OF the public tweet firehose per streaming second.
 # if the limitation occurs. Use the REST API or Search API to backfill the data. 
+## Step One retreive streaming data. Done. Check the Tweeter+Streaming notebook. 
+## Step Two Process streaming data. 
+# https://dev.twitter.com/streaming/overview/processing

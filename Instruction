@@ -1,0 +1,4 @@
+## Create a Tweeter Account for Developer. Generate access key and token for Twitter Streaming API
+# limitation of twitter streaming API:
+# The API cap the volume at 1% OF the public tweet firehose per streaming second.
+# if the limitation occurs. Use the REST API or Search API to backfill the data. 

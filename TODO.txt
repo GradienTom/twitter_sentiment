@@ -1,0 +1,1 @@
+1. Using AWS Lambda with Amazon DynamoDB: http://docs.aws.amazon.com/lambda/latest/dg/with-ddb.html

@@ -1,8 +1,0 @@
-aws lambda create-function \
---region ca-central-1 \
---function-name ProcessDynamoDBStream \
---zip-file fileb:///Users/shipu/Documents/twitter-sentiment/aws_lambda/ProcessDynamoDBStream.zip \
---role arn:aws:iam::369295726310:role/lambda-dynamodb-execution-role \
---handler ProcessDynamoDBStream.lambda_handler \
---runtime python2.7 \
---profile adminuser

@@ -5,48 +5,65 @@ import tweepy
 from tweepy import Stream
 from tweepy.streaming import StreamListener
 import datetime
+from bs4 import BeautifulSoup
 
 class Listener (StreamListener):
 
     def __init__(self, table):
         StreamListener.__init__(self)
         self.table = table
-
+        
     def on_data(self, data):
         try:
-            self.table.insert_tweet(Tweet(data))
+            decoded = json.loads(data)
+            self.table.insert_tweet(Tweet(decoded))
+        except KeyError, e:
+            print("Key Error", e)
         except Exception, e:
-            self.table.insert_log(Log(str(e)))
+            print("Error on data", e)
 
     def on_error(self, status):
-        self.table.insert_log(Log(str(status)))
-
+        print(status)
 
 class DataTable:
 
-    def __init__(self, tweets, logs):
-        self.tweets = tweets
-        self.logs = logs
+    def __init__(self, tweetTable, logTable):
+        self.tweetTable = tweetTable
+        self.logTable = logTable
 
     def insert_tweet(self, tweet):
-        self.tweets.put_item(
+        self.tweetTable.put_item(
             Item={
-                'Date': tweet.time_stamp,
+                'TimeStamp': tweet.time_stamp,
                 'Text': tweet.text,
+                'ID': tweet.id,
+                'Language': tweet.lang,
+                'Source': tweet.source,
+                'entities': {
+                    'Hashtags': tweet.entities.hashtags,
+                    'Mentions': tweet.entities.mentions
+                },
+                'user': {
+                    'ID': tweet.user.id,
+                    'name': tweet.user.name,
+                    'FavouritesCount': tweet.user.favourites_count,
+                    'FollowersCount': tweet.user.followers_count,
+                    'FriendsCount': tweet.user.friends_count,
+                }
             }
         )
 
     def insert_log(self, log):
-        self.logs.put_item(
+        self.logTable.put_item(
             Item={
-                'Date': log.time_stamp,
+                'TimeStamp': log.time_stamp,
                 'Message': log.message,
             }
         )
 
 
 class Log:
-
+        
     def __init__(self, message):
         self.message = message
         self.time_stamp = str(datetime.datetime.utcnow())
@@ -54,15 +71,38 @@ class Log:
 
 class Tweet:
 
-    def __init__(self, json_data):
-        tweet = json.loads(json_data)
+    def __init__(self, tweet):
+        self.id = tweet['id']
+        self.lang = tweet['lang']
         self.time_stamp, self.text = tweet['created_at'], tweet['text']
+        self.source = BeautifulSoup(tweet['source'], 'html.parser').get_text()
+
+        self.user = User(tweet['user'])
+        self.entities = Entities(tweet['entities'])
+        
         print(self.text)
 
 
-if __name__ == '__main__':
-    KEY_WORD = 'Car'
+class User:
+    
+    def __init__(self, user):
+        self.name = user['screen_name']
+        self.id = user['id']
+        self.favourites_count = user['favourites_count']
+        self.followers_count = user['followers_count']
+        self.friends_count = user['friends_count']
+        
+class Entities:
 
+    def __init__(self, entities):
+        self.hashtags, self.mentions = [], []
+        for hashtag in entities['hashtags']:
+            self.hashtags.append(hashtag['text'])
+        for mention in entities['user_mentions']:
+            self.mentions.append(mention['screen_name'])
+            
+
+if __name__ == '__main__':
     consumer_key= 'CvL60UbrszIbU7sPabRNsVis0'
     consumer_secret= 'OOU3EOonHMqOfaPZ7SGRYucP2wxDpHv5l3L0TKcyV09Oxw0yu3'
     access_token= '2374450932-EFnX9Rt07h4E1PWwj4lNyeunvF2KN3ahsqC5c3g'
@@ -74,4 +114,4 @@ if __name__ == '__main__':
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
     twitterStream = Stream(auth, Listener(table))
-    twitterStream.filter(track=[KEY_WORD])
+    twitterStream.sample()

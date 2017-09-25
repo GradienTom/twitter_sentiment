@@ -1,0 +1,6 @@
+Traning sentiment models 
+classification and entity extraction
+feature engineering
+Tools:
+sklearn pyspark ml(pipeline)
+NLTK, Standford coreNLP
